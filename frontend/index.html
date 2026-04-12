@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen 3-14B | Lokalni AI Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <img src="logo.png" alt="Logo" class="header-logo" />
+            <div>
+                <h1><span>Qwen 3-14B</span> — Lokalni AI Servis</h1>
+                <p>Završni rad - FOI - Sveučilište u Zagrebu · 2026.</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="btn-small" id="perf-toggle">Metrike: ON</button>
+            <button class="btn-small" id="reset-btn">Nova konverzacija</button>
+        </div>
+    </header>
+
+    <details class="system-prompt-bar">
+        <summary>System prompt</summary>
+        <textarea id="system-prompt">Ti si koristan AI asistent. Odgovaraj jasno i koncizno.</textarea>
+    </details>
+
+    <div id="chat-container">
+        <div class="welcome" id="welcome">
+            <img src="logo.png" alt="Qwen Local AI" class="welcome-logo" />
+            <h2>Qwen 3-14B lokalni model</h2>
+            <p>Postavite pitanje i model će generirati odgovor lokalno, bez slanja podataka u oblak.</p>
+        </div>
+    </div>
+
+    <div id="input-area">
+        <input type="text" id="user-input" placeholder="Unesite poruku..." autofocus />
+        <button id="send-btn">Pošalji</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
