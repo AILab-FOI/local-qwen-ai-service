@@ -15,6 +15,7 @@ conversation_history = []
 
 @app.route("/chat", methods=["POST"])
 def chat():
+    """Prima korisničku poruku i prosljeđuje je Ollama modelu."""
     data = request.json
     user_message = data.get("message", "")
     system_prompt = data.get("system_prompt", "Ti si koristan AI asistent. Odgovaraj jasno i koncizno.")
@@ -41,6 +42,24 @@ def chat():
     conversation_history.append({"role": "assistant", "content": assistant_message})
 
     return jsonify({"response": assistant_message})
+
+@app.route("/reset", methods=["POST"])
+def reset():
+    """Briše povijest razgovora."""
+    global conversation_history
+    conversation_history = []
+    return jsonify({"status": "Povijest razgovora obrisana."})
+
+@app.route("/health", methods=["GET"])
+def health():
+    """Provjerava je li Ollama servis aktivan."""
+    try:
+        r = requests.get("http://localhost:11434/api/tags")
+        models = [m["name"] for m in r.json().get("models", [])]
+        return jsonify({"status": "OK", "dostupni_modeli": models})
+    except requests.exceptions.ConnectionError:
+        return jsonify({"status": "Ollama nije dostupna"}), 503
+
 
 if __name__ == "__main__":
     print("Backend pokrenut na http://localhost:5000")
