@@ -41,7 +41,26 @@ def chat():
     assistant_message = response_data["message"]["content"]   
     conversation_history.append({"role": "assistant", "content": assistant_message})
 
-    return jsonify({"response": assistant_message})
+    # Izračun performansi iz Ollama metapodataka
+    eval_count = response_data.get("eval_count", 0)
+    eval_duration = response_data.get("eval_duration", 0)
+    prompt_eval_count = response_data.get("prompt_eval_count", 0)
+    total_duration = response_data.get("total_duration", 0)
+
+    tokens_per_second = 0
+    if eval_duration > 0:
+        tokens_per_second = eval_count / (eval_duration / 1_000_000_000)
+
+    return jsonify({"response": assistant_message,
+                    "performance": {
+                        "generirani_tokeni": eval_count,
+                        "tokeni_u_promptu": prompt_eval_count,
+                        "tokeni_po_sekundi": round(tokens_per_second, 2),
+                        "vrijeme_generiranja_s": round(eval_duration / 1_000_000_000, 2),
+                        "ukupno_vrijeme_s": round(total_duration / 1_000_000_000, 2),
+                        "poruka_u_kontekstu": len(conversation_history)
+                    }
+                    })
 
 @app.route("/reset", methods=["POST"])
 def reset():
