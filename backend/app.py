@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
+import os
 from flask_cors import CORS
 import requests
 
@@ -12,6 +13,19 @@ MODEL_NAME = "qwen3:14b"
 
 # Lista za pohranu povijesti razgovora
 conversation_history = []
+
+# Putanja do frontend mape
+FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '..', 'frontend')
+
+@app.route("/")
+def serve_frontend():
+    """Servira glavnu stranicu."""
+    return send_from_directory(FRONTEND_DIR, "index.html")
+
+@app.route("/<path:filename>")
+def serve_static(filename):
+    """Servira statičke datoteke (CSS, JS, logo)."""
+    return send_from_directory(FRONTEND_DIR, filename)
 
 @app.route("/chat", methods=["POST"])
 def chat():

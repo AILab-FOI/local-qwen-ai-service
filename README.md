@@ -27,13 +27,16 @@ frontend/
 ├── script.js
 └── logo.png
 ```
+## Pokretanje
 
-## Preduvjeti
+### Opcija 1: Lokalno pokretanje
+
+Za pokretanje na vlastitom računalu.
+
+**Preduvjeti:**
 - Python 3.10+
 - Ollama (https://ollama.com/download)
 - NVIDIA GPU s min. 8 GB VRAM-a
-
-## Pokretanje
 
 1. Preuzimanje modela:
 ```
@@ -51,5 +54,25 @@ pip install -r requirements.txt
 python app.py
 ```
 
-4. Otvoriti `frontend/index.html` u browseru
+4. Otvoriti `http://localhost:5000` u browseru
+
+### Opcija 2: Udaljeni pristup (Cloudflare Tunnel)
+
+Za pristup aplikaciji bez lokalne instalacije modela.
+
+**Preduvjeti (na računalu koje pokreće model):**
+- Ollama s preuzetim Qwen 3-14B modelom
+- Python backend pokrenut (`python app.py`)
+- Cloudflared instaliran (`winget install cloudflare.cloudflared`)
+
+Pokretanje tunela:
+```
+cloudflared tunnel --url http://localhost:5000
+```
+
+Generira se javni URL (npr. `https://xxxxx.trycloudflare.com`) preko kojeg bilo tko može pristupiti chat aplikaciji u browseru.
+
+**Napomena:** Računalo s modelom mora biti uključeno, URL se mijenja pri svakom pokretanju tunela.
+
+
 

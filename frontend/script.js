@@ -1,5 +1,5 @@
 // Konfiguracija API adrese 
-const API = "http://localhost:5000";
+const API = "";
 
 // Dohvacanje HTML elemenata
 const chat = document.getElementById("chat-container");
