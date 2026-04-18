@@ -1,11 +1,13 @@
 import requests
 
 API_URL = "http://localhost:5000"
+API_KEY = "foi-qwen-2026-lucija-sinko-k7mxq9p2"
+HEADERS = {"X-API-Key": API_KEY}
 
 def test_single_query(message, system_prompt="Ti si koristan AI asistent."):
     """Šalje jedan upit i vraća performanse."""
-    requests.post(f"{API_URL}/reset")
-    response = requests.post(f"{API_URL}/chat", json={
+    requests.post(f"{API_URL}/reset", headers=HEADERS)
+    response = requests.post(f"{API_URL}/chat", headers=HEADERS, json={
         "message": message,
         "system_prompt": system_prompt
     })
@@ -36,7 +38,7 @@ def test_system_prompts():
 def test_context_length():
     """Testira utjecaj duljine konteksta na brzinu generiranja."""
     print("\n=== Test utjecaja duljine konteksta ===\n")
-    requests.post(f"{API_URL}/reset")
+    requests.post(f"{API_URL}/reset", headers=HEADERS)
 
     messages = [
         "Što je Python?",
@@ -50,7 +52,7 @@ def test_context_length():
     ]
 
     for i, msg in enumerate(messages, 1):
-        response = requests.post(f"{API_URL}/chat", json={
+        response = requests.post(f"{API_URL}/chat", headers=HEADERS, json={
             "message": msg,
             "system_prompt": "Odgovaraj kratko, u 2-3 rečenice."
         })

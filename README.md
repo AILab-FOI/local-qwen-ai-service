@@ -78,3 +78,52 @@ Aplikacija je automatski dostupna na https://openfoi.com.
 
 
 
+## Sigurnosne mjere
+
+Aplikacija je zaštićena višeslojnim sigurnosnim mehanizmima radi smanjenja 
+izloženosti javno dostupnog endpointa na domeni openfoi.com.
+
+### Identificirane prijetnje
+
+Javna dostupnost aplikacije putem Cloudflare Tunnela uvodi sljedeće 
+potencijalne prijetnje:
+
+1. Neovlašteni pristup API endpointima
+2. Preopterećenje sustava automatiziranim zahtjevima
+3. Cross-Site Scripting (XSS) kroz korisnički unos
+4. Izloženost privatne IP adrese (riješeno reverse tunnel arhitekturom)
+
+### Implementirane mjere
+
+**Reverse tunnel arhitektura** - Cloudflare Tunnel uspostavlja trajnu izlaznu 
+vezu između lokalnog računala i Cloudflareove edge mreže.
+
+**Autentifikacija API ključem** - osjetljivi endpointi `/chat` i `/reset` 
+zaštićeni su provjerom tajnog ključa u HTTP zaglavlju `X-API-Key`. 
+
+**Rate limiting** - biblioteka Flask-Limiter ograničava broj zahtjeva po 
+IP adresi na 30 u minuti, odnosno 200 u satu. Pri prekoračenju poslužitelj 
+vraća HTTP 429 bez prosljeđivanja zahtjeva Ollama servisu, čime se štiti 
+GPU od preopterećenja.
+
+**XSS zaštita** - frontend JavaScript sadrži funkciju `escapeHtml()` koja 
+pretvara korisnički unos u siguran tekstualni sadržaj prije umetanja u DOM, 
+čime se sprječava izvršavanje injiciranog HTML ili JavaScript koda.
+
+### Namjerno otvoreni endpointi
+
+Rute `/` i `/<path:filename>` ostaju javno dostupne jer serviraju statičke 
+datoteke frontenda (HTML, CSS, JavaScript, logo). Ruta `/health` također je 
+otvorena kao dijagnostički endpoint za provjeru statusa Ollama servisa.
+
+### Ograničenja
+
+Implementirane mjere postavljene su prema kontekstu završnog rada, a ne 
+prema standardima produkcijske primjene. Ključne napomene:
+
+- API ključ je ugrađen u frontend kod radi jednostavnosti demonstracije. 
+  U produkcijskom okruženju koristila bi se prava korisnička autentifikacija 
+- Rate limiting je memorijski baziran i resetira se pri ponovnom pokretanju 
+  aplikacije. Za produkciju bi se koristio perzistentni storage.
+- Aplikacija je dostupna samo dok je lokalno računalo uključeno i backend 
+  pokrenut.

@@ -1,11 +1,33 @@
 from flask import Flask, request, jsonify, send_from_directory
-import os
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from functools import wraps
+import os
 import requests
 
 # Inicijalizacija Flask aplikacije
 app = Flask(__name__)
 CORS(app)
+
+# Sigurnosni API kljuc za pristup zasticenim endpointima
+API_KEY = "foi-qwen-2026-lucija-sinko-k7mxq9p2"
+
+# Rate limiter - ogranicava broj zahtjeva po IP adresi
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["30 per minute", "200 per hour"]
+)
+
+# Dekorator za provjeru API kljuca u zaglavlju zahtjeva
+def require_api_key(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if request.headers.get("X-API-Key") != API_KEY:
+            return jsonify({"error": "Neautoriziran pristup"}), 401
+        return f(*args, **kwargs)
+    return decorated
 
 # Konfiguracija Ollama servisa
 OLLAMA_URL = "http://localhost:11434/api/chat"
@@ -28,6 +50,7 @@ def serve_static(filename):
     return send_from_directory(FRONTEND_DIR, filename)
 
 @app.route("/chat", methods=["POST"])
+@require_api_key
 def chat():
     """Prima korisničku poruku i prosljeđuje je Ollama modelu."""
     data = request.json
@@ -79,6 +102,7 @@ def chat():
                     })
 
 @app.route("/reset", methods=["POST"])
+@require_api_key
 def reset():
     """Briše povijest razgovora."""
     global conversation_history

@@ -1,5 +1,6 @@
 // Konfiguracija API adrese 
 const API = "";
+const API_KEY = "foi-qwen-2026-lucija-sinko-k7mxq9p2";
 
 // Dohvacanje HTML elemenata
 const chat = document.getElementById("chat-container");
@@ -63,7 +64,9 @@ async function sendMessage() {
     try {
         var res = await fetch(API + "/chat", {
             method: "POST",
-            headers: {"Content-Type": "application/json"},
+            headers: {"Content-Type": "application/json",
+                        "X-API-Key": API_KEY
+            },
             body: JSON.stringify({
                 message: msg,
                 system_prompt: sysPrompt
@@ -133,7 +136,10 @@ function escapeHtml(text) {
 
 // Funcija za resetiranje chata
 async function resetChat() {
-    await fetch(API + "/reset", {method: "POST"});
+    await fetch(API + "/reset", {
+        method: "POST",
+        headers: {"X-API-Key": API_KEY}
+    });
     chat.innerHTML =
         '<div class="welcome" id="welcome">' +
         '  <img src="logo.png" alt="Qwen Local AI" class="welcome-logo" />' +
