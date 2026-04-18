@@ -53,6 +53,8 @@ def chat():
     
     # Izvuci odgovor modela i spremi u povijest
     assistant_message = response_data["message"]["content"]   
+    # Ukloni markdown formatiranje iz odgovora
+    assistant_message = assistant_message.replace("**", "").replace("##", "").replace("*", "").replace("#", "")
     conversation_history.append({"role": "assistant", "content": assistant_message})
 
     # Izračun performansi iz Ollama metapodataka
