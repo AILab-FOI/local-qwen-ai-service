@@ -4,7 +4,19 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from functools import wraps
 import os
+import logging 
+from datetime import datetime
 import requests
+
+
+# Konfiguracija logiranja u datoteku
+logging.basicConfig(
+    filename='access.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    encoding='utf-8'
+)
 
 # Inicijalizacija Flask aplikacije
 app = Flask(__name__)
@@ -38,6 +50,12 @@ conversation_history = []
 
 # Putanja do frontend mape
 FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '..', 'frontend')
+
+@app.before_request
+def log_request():
+    """Zapisuje svaki dolazni zahtjev u access.log"""
+    has_token = request.headers.get("X-API-Key") == API_KEY
+    logging.info(f"IP={request.remote_addr} | {request.method} {request.path} | token_valid={has_token}")
 
 @app.route("/")
 def serve_frontend():
