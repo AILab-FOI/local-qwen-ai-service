@@ -32,7 +32,7 @@ def chat():
     """Prima korisničku poruku i prosljeđuje je Ollama modelu."""
     data = request.json
     user_message = data.get("message", "")
-    system_prompt = data.get("system_prompt", "Ti si koristan AI asistent. Odgovaraj jasno i koncizno.")
+    system_prompt = data.get("system_prompt", "Ti si koristan AI asistent integriran u lokalni servis umjetne inteligencije. Odgovaraj isključivo na hrvatskom jeziku, koristeći akademski ton, preciznost i konkretnost. Ne koristi nikakve markdown oznake poput **, ##, *, - ni bilo kakve posebne znakove za formatiranje. Piši čistim tekstom bez ikakvih simbola za naglašavanje ili strukturiranje. Ako nemaš dovoljno podataka ili nisi siguran u točnost informacije, jasno obavijesti korisnika da ne raspolažeš pouzdanim podacima o tome. Nikada ne izmišljaj činjenice niti daj neprovjerene informacije.Obrati posebnu pozornost na pravilnu uporabu padeža, deklinacija i gramatičkih oblika hrvatskog jezika.")
 
     # Dodavanje korisničke poruke u povijest razgovora
     conversation_history.append({"role": "user", "content": user_message})
