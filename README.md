@@ -95,6 +95,14 @@ potencijalne prijetnje:
 
 ### Implementirane mjere
 
+**Izolacija konverzacija po sesiji** - backend pohranjuje povijest 
+razgovora u memorijski rječnik `conversations` gdje je ključ jedinstveni 
+`session_id` (UUID generiran na frontendu kroz `crypto.randomUUID()` pri 
+svakom učitavanju stranice). Time se postiže razdvajanje konverzacija 
+između istovremenih korisnika - svaki browser tab dobiva vlastiti, 
+izolirani kontekst. Povijest razgovora nije perzistentna; briše se pri 
+ponovnom pokretanju backend aplikacije ili osvježavanju stranice korisnika.
+
 **Reverse tunnel arhitektura** - Cloudflare Tunnel uspostavlja trajnu izlaznu 
 vezu između lokalnog računala i Cloudflareove edge mreže.
 
@@ -127,3 +135,10 @@ prema standardima produkcijske primjene. Ključne napomene:
   aplikacije. Za produkciju bi se koristio perzistentni storage.
 - Aplikacija je dostupna samo dok je lokalno računalo uključeno i backend 
   pokrenut.
+  - Konverzacije se ne perzistiraju između restarta backenda niti preko 
+  refresh-a stranice - svaka nova sesija počinje s praznim kontekstom. 
+  U daljnjem razvoju mogla bi se dodati lagana perzistentna pohrana 
+  (npr. SQLite baza).
+- Zbog prirode lokalnog GPU inferenca, Ollama sekvencijalno obrađuje 
+  upite - istovremeni zahtjevi više korisnika ulaze u red čekanja. 
+ 
