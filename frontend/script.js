@@ -1,6 +1,7 @@
 // Konfiguracija API adrese 
 const API = "";
 const API_KEY = "foi-qwen-2026-lucija-sinko-k7mxq9p2";
+const SESSION_ID = crypto.randomUUID();
 
 // Dohvacanje HTML elemenata
 const chat = document.getElementById("chat-container");
@@ -69,7 +70,8 @@ async function sendMessage() {
             },
             body: JSON.stringify({
                 message: msg,
-                system_prompt: sysPrompt
+                system_prompt: sysPrompt,
+                session_id: SESSION_ID
             })
         });
 
@@ -138,7 +140,11 @@ function escapeHtml(text) {
 async function resetChat() {
     await fetch(API + "/reset", {
         method: "POST",
-        headers: {"X-API-Key": API_KEY}
+        headers: {
+            "Content-Type": "application/json",
+            "X-API-Key": API_KEY
+        },
+        body: JSON.stringify({session_id: SESSION_ID})
     });
     chat.innerHTML =
         '<div class="welcome" id="welcome">' +

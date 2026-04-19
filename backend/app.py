@@ -46,7 +46,7 @@ OLLAMA_URL = "http://localhost:11434/api/chat"
 MODEL_NAME = "qwen3:14b"
 
 # Lista za pohranu povijesti razgovora
-conversation_history = []
+conversations = {} # session id -> lista poruka
 
 # Putanja do frontend mape
 FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '..', 'frontend')
@@ -74,12 +74,18 @@ def chat():
     data = request.json
     user_message = data.get("message", "")
     system_prompt = data.get("system_prompt", "Ti si koristan AI asistent integriran u lokalni servis umjetne inteligencije. Odgovaraj isključivo na hrvatskom jeziku, koristeći akademski ton, preciznost i konkretnost. Ne koristi nikakve markdown oznake poput **, ##, *, - ni bilo kakve posebne znakove za formatiranje. Piši čistim tekstom bez ikakvih simbola za naglašavanje ili strukturiranje. Ako nemaš dovoljno podataka ili nisi siguran u točnost informacije, jasno obavijesti korisnika da ne raspolažeš pouzdanim podacima o tome. Nikada ne izmišljaj činjenice niti daj neprovjerene informacije.Obrati posebnu pozornost na pravilnu uporabu padeža, deklinacija i gramatičkih oblika hrvatskog jezika.")
+    session_id = data.get("session_id", "default")
+
+    # inicijalizacija nove konverzacije ako sesija postoji
+    if session_id not in conversations:
+        conversations[session_id] = []
+    history = conversations[session_id]
 
     # Dodavanje korisničke poruke u povijest razgovora
-    conversation_history.append({"role": "user", "content": user_message})
+    history.append({"role": "user", "content": user_message})
     
     # Kreiranje liste poruka: system prompt + cijela povijest razgovora
-    messages = [{"role": "system", "content": system_prompt}] + conversation_history
+    messages = [{"role": "system", "content": system_prompt}] + history
 
     # Slanje zahtjeva Ollama servisu
     try:
@@ -96,7 +102,7 @@ def chat():
     assistant_message = response_data["message"]["content"]   
     # Ukloni markdown formatiranje iz odgovora
     assistant_message = assistant_message.replace("**", "").replace("##", "").replace("*", "").replace("#", "")
-    conversation_history.append({"role": "assistant", "content": assistant_message})
+    history.append({"role": "assistant", "content": assistant_message})
 
     # Izračun performansi iz Ollama metapodataka
     eval_count = response_data.get("eval_count", 0)
@@ -115,16 +121,18 @@ def chat():
                         "tokeni_po_sekundi": round(tokens_per_second, 2),
                         "vrijeme_generiranja_s": round(eval_duration / 1_000_000_000, 2),
                         "ukupno_vrijeme_s": round(total_duration / 1_000_000_000, 2),
-                        "poruka_u_kontekstu": len(conversation_history)
+                        "poruka_u_kontekstu": len(history)
                     }
                     })
 
 @app.route("/reset", methods=["POST"])
 @require_api_key
 def reset():
-    """Briše povijest razgovora."""
-    global conversation_history
-    conversation_history = []
+    """Briše povijest razgovora za trenutnu sesiju."""
+    data = request.json or {}
+    session_id = data.get("session_id", "default")
+    if session_id in conversations:
+        conversations[session_id] = []
     return jsonify({"status": "Povijest razgovora obrisana."})
 
 @app.route("/health", methods=["GET"])
