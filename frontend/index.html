@@ -12,7 +12,7 @@
         <div class="header-left">
             <img src="logo.png" alt="Logo" class="header-logo" />
             <div>
-                <h1><span>Qwen 3-14B</span> — Lokalni AI Servis</h1>
+               <h1><span>Qwen 3-14B<span class="status-dot"></span></span> — Lokalni AI Servis</h1>
                 <p>Završni rad - FOI - Sveučilište u Zagrebu · 2026.</p>
             </div>
         </div>
@@ -32,6 +32,12 @@
             <img src="logo.png" alt="Qwen Local AI" class="welcome-logo" />
             <h2>Qwen 3-14B lokalni model</h2>
             <p>Postavite pitanje i model će generirati odgovor lokalno, bez slanja podataka u oblak.</p>
+
+             <div class="welcome-suggestions">
+            <button class="suggestion-chip" onclick="document.getElementById('user-input').value=this.textContent;document.getElementById('user-input').focus();">Objasni mi pojam strojnog učenja</button>
+            <button class="suggestion-chip" onclick="document.getElementById('user-input').value=this.textContent;document.getElementById('user-input').focus();">Napiši kratki sažetak teksta</button>
+            <button class="suggestion-chip" onclick="document.getElementById('user-input').value=this.textContent;document.getElementById('user-input').focus();">Pomozi mi s programiranjem</button>
+        </div>
         </div>
     </div>
 
