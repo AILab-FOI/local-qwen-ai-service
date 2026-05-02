@@ -44,6 +44,7 @@ def require_api_key(f):
 # Konfiguracija Ollama servisa
 OLLAMA_URL = "http://localhost:11434/api/chat"
 MODEL_NAME = "qwen3:14b"
+MAX_HISTORY = 20 #maksimalan broj poruka u povijesti razgovora
 
 # Lista za pohranu povijesti razgovora
 conversations = {} # session id -> lista poruka
@@ -84,6 +85,11 @@ def chat():
     # Dodavanje korisničke poruke u povijest razgovora
     history.append({"role": "user", "content": user_message})
     
+    # Ograničavanje broja poruka u povijesti
+    if len(history) > MAX_HISTORY:
+        history = history[-MAX_HISTORY:]
+        conversations[session_id] = history
+
     # Kreiranje liste poruka: system prompt + cijela povijest razgovora
     messages = [{"role": "system", "content": system_prompt}] + history
 
@@ -93,11 +99,13 @@ def chat():
             "model": MODEL_NAME,
             "messages": messages,
             "stream": False
-        })
+        }, timeout=120)
         response_data = response.json()
     except requests.exceptions.ConnectionError:
         return jsonify({"error": "Ollama servis nije pokrenut."}), 503
-    
+    except requests.exceptions.Timeout:
+        return jsonify({"error": "Model nije odgovorio u zadanom vremenu (120 s)"}), 504
+
     # Izvuci odgovor modela i spremi u povijest
     assistant_message = response_data["message"]["content"]   
     # Ukloni markdown formatiranje iz odgovora
