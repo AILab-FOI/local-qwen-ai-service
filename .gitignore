@@ -209,3 +209,6 @@ __marimo__/
 
 access.log
 *.log
+
+# Rezultati testova performansi (lokalni)
+*.csv
