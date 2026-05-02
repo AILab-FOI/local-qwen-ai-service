@@ -16,16 +16,16 @@ Završni rad -  Praktična primjena otvorenog LLM modela Qwen 3-14B kroz izgradn
 ## Struktura projekta
 
 ```
-backend/
-├── app.py
-├── test_performance.py
-└── requirements.txt
-
-frontend/
-├── index.html
-├── style.css
-├── script.js
-└── logo.png
+qwen-local-ai/
+├── backend/
+│   ├── app.py
+│   ├── test_performance.py
+│   └── requirements.txt
+└── frontend/
+    ├── index.html
+    ├── style.css
+    ├── script.js
+    └── logo.png
 ```
 ## Pokretanje
 
