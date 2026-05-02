@@ -22,13 +22,17 @@ logging.basicConfig(
 app = Flask(__name__)
 CORS(app)
 
+def get_real_ip():
+    """Vraća stvarnu IP adresu korisnika kroz Cloudflare zaglavlje."""
+    return request.headers.get("CF-Connecting-IP", get_remote_address())
+
 # Sigurnosni API kljuc za pristup zasticenim endpointima
 API_KEY = "foi-qwen-2026-lucija-sinko-k7mxq9p2"
 
 # Rate limiter - ogranicava broj zahtjeva po IP adresi
 limiter = Limiter(
     app=app,
-    key_func=get_remote_address,
+    key_func=get_real_ip,
     default_limits=["30 per minute", "200 per hour"]
 )
 
@@ -56,7 +60,9 @@ FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '..', 'frontend')
 def log_request():
     """Zapisuje svaki dolazni zahtjev u access.log"""
     has_token = request.headers.get("X-API-Key") == API_KEY
-    logging.info(f"IP={request.remote_addr} | {request.method} {request.path} | token_valid={has_token}")
+    # Stvarna IP korisnika dolazi kroz Cloudflare zaglavlje, lokalno fallback na remote_addr
+    real_ip = request.headers.get("CF-Connecting-IP", request.remote_addr)
+    logging.info(f"IP={real_ip} | {request.method} {request.path} | token_valid={has_token}")
 
 @app.route("/")
 def serve_frontend():
