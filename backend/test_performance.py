@@ -16,7 +16,8 @@ def save_results_to_csv(filename, rows, headers):
     
 def test_single_query(message, system_prompt="Ti si koristan AI asistent."):
     """Šalje jedan upit i vraća performanse."""
-    requests.post(f"{API_URL}/reset", headers=HEADERS)
+    requests.post(f"{API_URL}/reset", headers=HEADERS, json={"session_id": "default"})
+
     response = requests.post(f"{API_URL}/chat", headers=HEADERS, json={
         "message": message,
         "system_prompt": system_prompt
@@ -26,6 +27,8 @@ def test_single_query(message, system_prompt="Ti si koristan AI asistent."):
 
 def test_system_prompts():
     """Testira utjecaj različitih system promptova na odgovore."""
+    requests.post(f"{API_URL}/chat", headers=HEADERS,
+                  json={"message": "Pozdrav", "system_prompt": "Ti si asistent."})
     print("\n=== Test utjecaja system promptova ===\n")
     test_message = "Što je strojno učenje?"
 
@@ -57,49 +60,27 @@ def test_system_prompts():
 
 
 def test_context_length():
-    """Testira utjecaj duljine konteksta na brzinu generiranja."""
     print("\n=== Test utjecaja duljine konteksta ===\n")
-    requests.post(f"{API_URL}/reset", headers=HEADERS)
-
-    messages = [
-        "Što je Python?",
-        "Koje su prednosti Pythona?",
-        "Kako se definira funkcija u Pythonu?",
-        "Što su liste u Pythonu?",
-        "Objasni rječnike u Pythonu.",
-        "Što je petlja for u Pythonu?",
-        "Kako se radi s datotekama u Pythonu?",
-        "Što su klase u Pythonu?",
-    ]
+    base = "Ovo je testna rečenica za umjetno punjenje konteksta modela. "
+    ponavljanja = [10, 40, 80, 150, 250, 350, 450]   
 
     rows = []
-    for i, msg in enumerate(messages, 1):
+    for i, n in enumerate(ponavljanja, 1):
+        requests.post(f"{API_URL}/reset", headers=HEADERS, json={"session_id": "default"})
+        message = base * n + "\nUkratko objasni što je strojno učenje."
         response = requests.post(f"{API_URL}/chat", headers=HEADERS, json={
-            "message": msg,
-            "system_prompt": "Odgovaraj kratko, u 2-3 rečenice."
+            "message": message,
+            "system_prompt": "Odgovaraj sažeto.",
+            "num_predict": 200            
         })
-        data = response.json()
-        perf = data["performance"]
-        print(f"Poruka {i}: \"{msg}\"")
-        print(f"  Tokeni u promptu: {perf['tokeni_u_promptu']}")
-        print(f"  Generirani tokeni: {perf['generirani_tokeni']}")
-        print(f"  Brzina: {perf['tokeni_po_sekundi']} tok/s")
-        print(f"  Vrijeme: {perf['ukupno_vrijeme_s']}s")
-        print()
-
+        perf = response.json()["performance"]
+        print(f"Mjerenje {i}: {perf['tokeni_u_promptu']} tok u promptu -> {perf['tokeni_po_sekundi']} tok/s")
 
         rows.append([
-                i,
-                msg,
-                perf['tokeni_u_promptu'],
-                perf['generirani_tokeni'],
-                perf['tokeni_po_sekundi'],
-                perf['vrijeme_generiranja_s'],
-                perf['ukupno_vrijeme_s'],
-                perf['poruka_u_kontekstu']
+            i, perf['tokeni_u_promptu'], perf['generirani_tokeni'],
+            perf['tokeni_po_sekundi'], perf['vrijeme_generiranja_s'], perf['ukupno_vrijeme_s']
         ])
-
-    headers = ["redni_broj", "poruka", "tokeni_u_promptu", "generirani_tokeni", "tokeni_po_sekundi", "vrijeme_generiranja_s", "ukupno_vrijeme_s", "poruka_u_kontekstu"          ]
+    headers = ["redni_broj", "tokeni_u_promptu", "generirani_tokeni", "tokeni_po_sekundi", "vrijeme_generiranja_s", "ukupno_vrijeme_s"]
     save_results_to_csv("rezultati_context_length.csv", rows, headers)
 
 if __name__ == "__main__":

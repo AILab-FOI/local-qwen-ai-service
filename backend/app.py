@@ -48,7 +48,11 @@ def require_api_key(f):
 # Konfiguracija Ollama servisa
 OLLAMA_URL = "http://localhost:11434/api/chat"
 MODEL_NAME = "qwen3:14b"
-MAX_HISTORY = 20 #maksimalan broj poruka u povijesti razgovora
+NUM_CTX = 8192
+NUM_PREDICT = 200
+MAX_HISTORY = 50 #maksimalan broj poruka u povijesti razgovora
+
+
 
 # Lista za pohranu povijesti razgovora
 conversations = {} # session id -> lista poruka
@@ -82,6 +86,7 @@ def chat():
     user_message = data.get("message", "")
     system_prompt = data.get("system_prompt", "Ti si koristan AI asistent integriran u lokalni servis umjetne inteligencije. Odgovaraj isključivo na hrvatskom jeziku, koristeći akademski ton, preciznost i konkretnost. Ne koristi nikakve markdown oznake poput **, ##, *, - ni bilo kakve posebne znakove za formatiranje. Piši čistim tekstom bez ikakvih simbola za naglašavanje ili strukturiranje. Ako nemaš dovoljno podataka ili nisi siguran u točnost informacije, jasno obavijesti korisnika da ne raspolažeš pouzdanim podacima o tome. Nikada ne izmišljaj činjenice niti daj neprovjerene informacije.Obrati posebnu pozornost na pravilnu uporabu padeža, deklinacija i gramatičkih oblika hrvatskog jezika.")
     session_id = data.get("session_id", "default")
+    num_predict = data.get("num_predict", None)
 
     # inicijalizacija nove konverzacije ako sesija postoji
     if session_id not in conversations:
@@ -100,11 +105,16 @@ def chat():
     messages = [{"role": "system", "content": system_prompt}] + history
 
     # Slanje zahtjeva Ollama servisu
+    options = {"num_ctx": NUM_CTX}
+    if num_predict is not None:
+        options["num_predict"] = num_predict
+
     try:
         response = requests.post(OLLAMA_URL, json={
             "model": MODEL_NAME,
             "messages": messages,
-            "stream": False
+            "stream": False,
+            "options": options
         }, timeout=120)
         response_data = response.json()
     except requests.exceptions.ConnectionError:
@@ -143,7 +153,7 @@ def chat():
 @require_api_key
 def reset():
     """Briše povijest razgovora za trenutnu sesiju."""
-    data = request.json or {}
+    data = request.get_json(silent=True) or {}
     session_id = data.get("session_id", "default")
     if session_id in conversations:
         conversations[session_id] = []
