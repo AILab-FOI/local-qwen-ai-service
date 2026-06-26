@@ -21,11 +21,20 @@ qwen-local-ai/
 │   ├── app.py
 │   ├── test_performance.py
 │   └── requirements.txt
-└── frontend/
-    ├── index.html
-    ├── style.css
-    ├── script.js
-    └── logo.png
+├── frontend/
+│   ├── index.html
+│   ├── style.css
+│   ├── script.js
+│   └── logo.png
+├── generiraj_grafove.py
+├── rezultati_context_length.csv
+├── rezultati_system_prompts.csv
+├── graf_brzina_vs_kontekst.pdf
+├── graf_duljina_po_promptu.pdf
+├── access.log
+├── .gitignore
+├── LICENSE
+└── README.md
 ```
 ## Pokretanje
 

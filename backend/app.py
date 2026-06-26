@@ -50,11 +50,11 @@ OLLAMA_URL = "http://localhost:11434/api/chat"
 MODEL_NAME = "qwen3:14b"
 NUM_CTX = 8192
 NUM_PREDICT = 200
-MAX_HISTORY = 50 #maksimalan broj poruka u povijesti razgovora
+MAX_HISTORY = 20 #maksimalan broj poruka u povijesti razgovora
 
 
 
-# Lista za pohranu povijesti razgovora
+# Rjecnik za pohranu povijesti razgovora po sesiji
 conversations = {} # session id -> lista poruka
 
 # Putanja do frontend mape
@@ -88,7 +88,7 @@ def chat():
     session_id = data.get("session_id", "default")
     num_predict = data.get("num_predict", None)
 
-    # inicijalizacija nove konverzacije ako sesija postoji
+    # inicijalizacija nove konverzacije ako sesija ne postoji
     if session_id not in conversations:
         conversations[session_id] = []
     history = conversations[session_id]
