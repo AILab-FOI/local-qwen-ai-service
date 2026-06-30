@@ -5,7 +5,6 @@ from flask_limiter.util import get_remote_address
 from functools import wraps
 import os
 import logging 
-from datetime import datetime
 import requests
 
 
@@ -27,7 +26,7 @@ def get_real_ip():
     return request.headers.get("CF-Connecting-IP", get_remote_address())
 
 # Sigurnosni API kljuc za pristup zasticenim endpointima
-API_KEY = "foi-qwen-2026-lucija-sinko-k7mxq9p2"
+API_KEY = "local-qwen-demo-key-2026"
 
 # Rate limiter - ogranicava broj zahtjeva po IP adresi
 limiter = Limiter(
@@ -52,8 +51,6 @@ NUM_CTX = 8192
 NUM_PREDICT = 200
 MAX_HISTORY = 20 #maksimalan broj poruka u povijesti razgovora
 
-
-
 # Rjecnik za pohranu povijesti razgovora po sesiji
 conversations = {} # session id -> lista poruka
 
@@ -64,8 +61,7 @@ FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '..', 'frontend')
 def log_request():
     """Zapisuje svaki dolazni zahtjev u access.log"""
     has_token = request.headers.get("X-API-Key") == API_KEY
-    # Stvarna IP korisnika dolazi kroz Cloudflare zaglavlje, lokalno fallback na remote_addr
-    real_ip = request.headers.get("CF-Connecting-IP", request.remote_addr)
+    real_ip = get_real_ip()
     logging.info(f"IP={real_ip} | {request.method} {request.path} | token_valid={has_token}")
 
 @app.route("/")
@@ -96,11 +92,6 @@ def chat():
     # Dodavanje korisničke poruke u povijest razgovora
     history.append({"role": "user", "content": user_message})
     
-    # Ograničavanje broja poruka u povijesti
-    if len(history) > MAX_HISTORY:
-        history = history[-MAX_HISTORY:]
-        conversations[session_id] = history
-
     # Kreiranje liste poruka: system prompt + cijela povijest razgovora
     messages = [{"role": "system", "content": system_prompt}] + history
 
@@ -127,6 +118,11 @@ def chat():
     # Ukloni markdown formatiranje iz odgovora
     assistant_message = assistant_message.replace("**", "").replace("##", "").replace("*", "").replace("#", "")
     history.append({"role": "assistant", "content": assistant_message})
+
+    #zadrzavanje zadnjih MAX_HISTORY poruka (cijeli user+assistant parovi) u povijesti razgovora
+    if len(history) > MAX_HISTORY:
+        history = history[-MAX_HISTORY:]
+        conversations[session_id] = history
 
     # Izračun performansi iz Ollama metapodataka
     eval_count = response_data.get("eval_count", 0)

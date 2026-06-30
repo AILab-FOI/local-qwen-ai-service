@@ -1,9 +1,8 @@
 import requests
 import csv 
-from datetime import datetime
 
 API_URL = "http://localhost:5000"
-API_KEY = "foi-qwen-2026-lucija-sinko-k7mxq9p2"
+API_KEY = "local-qwen-demo-key-2026"
 HEADERS = {"X-API-Key": API_KEY}
 
 def save_results_to_csv(filename, rows, headers):

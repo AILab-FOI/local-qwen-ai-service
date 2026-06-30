@@ -45,7 +45,7 @@ Za pokretanje na vlastitom računalu.
 **Preduvjeti:**
 - Python 3.10+
 - Ollama (https://ollama.com/download)
-- NVIDIA GPU s min. 8 GB VRAM-a
+- NVIDIA GPU s min. 8 GB VRAM-a, preporučeno 12 GB
 
 1. Preuzimanje modela:
 ```

@@ -1,6 +1,6 @@
 // Konfiguracija API adrese 
 const API = "";
-const API_KEY = "foi-qwen-2026-lucija-sinko-k7mxq9p2";
+const API_KEY = "local-qwen-demo-key-2026";
 const SESSION_ID = crypto.randomUUID();
 
 // Dohvacanje HTML elemenata
