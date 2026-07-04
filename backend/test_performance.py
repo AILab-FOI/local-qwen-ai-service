@@ -37,11 +37,20 @@ def test_system_prompts():
         "Kratak": "Odgovaraj u maksimalno dvije rečenice.",
         "Stručan": "Ti si profesor na fakultetu. Koristi akademski stil pisanja.",
     }
+
+    PONAVLJANJA = 3
     rows = []
     for name, prompt in prompts.items():
-        perf = test_single_query(test_message, prompt)
+        mjerenja = [test_single_query(test_message, prompt) for _ in range(PONAVLJANJA)]
+        perf = {
+            'generirani_tokeni': round(sum(m['generirani_tokeni'] for m in mjerenja) / PONAVLJANJA),
+            'tokeni_u_promptu': mjerenja[0]['tokeni_u_promptu'],
+            'tokeni_po_sekundi': round(sum(m['tokeni_po_sekundi'] for m in mjerenja) / PONAVLJANJA, 2),
+            'vrijeme_generiranja_s': round(sum(m['vrijeme_generiranja_s'] for m in mjerenja) / PONAVLJANJA, 2),
+            'ukupno_vrijeme_s': round(sum(m['ukupno_vrijeme_s'] for m in mjerenja) / PONAVLJANJA, 2),
+        }
         print(f"System prompt: {name}")
-        print(f"  Generirani tokeni: {perf['generirani_tokeni']}")
+        print(f"  Generirani tokeni (prosjek od {PONAVLJANJA}): {perf['generirani_tokeni']}")
         print(f"  Brzina: {perf['tokeni_po_sekundi']} tok/s")
         print(f"  Vrijeme: {perf['ukupno_vrijeme_s']}s")
         print()
@@ -63,18 +72,28 @@ def test_context_length():
     base = "Ovo je testna rečenica za umjetno punjenje konteksta modela. "
     ponavljanja = [10, 40, 80, 150, 250, 350, 450]   
 
+    PONAVLJANJA = 3
     rows = []
     for i, n in enumerate(ponavljanja, 1):
-        requests.post(f"{API_URL}/reset", headers=HEADERS, json={"session_id": "default"})
-        message = base * n + "\nUkratko objasni što je strojno učenje."
-        response = requests.post(f"{API_URL}/chat", headers=HEADERS, json={
-            "message": message,
-            "system_prompt": "Odgovaraj sažeto.",
-            "num_predict": 200            
-        })
-        perf = response.json()["performance"]
-        print(f"Mjerenje {i}: {perf['tokeni_u_promptu']} tok u promptu -> {perf['tokeni_po_sekundi']} tok/s")
+        mjerenja = []
+        for _ in range(PONAVLJANJA):
+            requests.post(f"{API_URL}/reset", headers=HEADERS, json={"session_id": "default"})
+            message = base * n + "\nUkratko objasni što je strojno učenje."
+            response = requests.post(f"{API_URL}/chat", headers=HEADERS, json={
+                "message": message,
+                "system_prompt": "Odgovaraj sažeto.",
+                "num_predict": 200
+            })
+            mjerenja.append(response.json()["performance"])
 
+        perf = {
+            'tokeni_u_promptu': mjerenja[0]['tokeni_u_promptu'],
+            'generirani_tokeni': round(sum(m['generirani_tokeni'] for m in mjerenja) / PONAVLJANJA),
+            'tokeni_po_sekundi': round(sum(m['tokeni_po_sekundi'] for m in mjerenja) / PONAVLJANJA, 2),
+            'vrijeme_generiranja_s': round(sum(m['vrijeme_generiranja_s'] for m in mjerenja) / PONAVLJANJA, 2),
+            'ukupno_vrijeme_s': round(sum(m['ukupno_vrijeme_s'] for m in mjerenja) / PONAVLJANJA, 2),
+        }
+        print(f"Mjerenje {i}: {perf['tokeni_u_promptu']} tok u promptu -> {perf['tokeni_po_sekundi']} tok/s")
         rows.append([
             i, perf['tokeni_u_promptu'], perf['generirani_tokeni'],
             perf['tokeni_po_sekundi'], perf['vrijeme_generiranja_s'], perf['ukupno_vrijeme_s']

@@ -6,6 +6,7 @@ from functools import wraps
 import os
 import logging 
 import requests
+import re
 
 
 # Konfiguracija logiranja u datoteku
@@ -48,8 +49,8 @@ def require_api_key(f):
 OLLAMA_URL = "http://localhost:11434/api/chat"
 MODEL_NAME = "qwen3:14b"
 NUM_CTX = 8192
-NUM_PREDICT = 200
-MAX_HISTORY = 20 #maksimalan broj poruka u povijesti razgovora
+MAX_HISTORY = 20 # maksimalan broj poruka u povijesti razgovora
+MAX_SESSIONS = 100  # maksimalan broj istovremeno pohranjenih sesija
 
 # Rjecnik za pohranu povijesti razgovora po sesiji
 conversations = {} # session id -> lista poruka
@@ -78,14 +79,16 @@ def serve_static(filename):
 @require_api_key
 def chat():
     """Prima korisničku poruku i prosljeđuje je Ollama modelu."""
-    data = request.json
+    data = request.get_json(silent=True) or {}
     user_message = data.get("message", "")
-    system_prompt = data.get("system_prompt", "Ti si koristan AI asistent integriran u lokalni servis umjetne inteligencije. Odgovaraj isključivo na hrvatskom jeziku, koristeći akademski ton, preciznost i konkretnost. Ne koristi nikakve markdown oznake poput **, ##, *, - ni bilo kakve posebne znakove za formatiranje. Piši čistim tekstom bez ikakvih simbola za naglašavanje ili strukturiranje. Ako nemaš dovoljno podataka ili nisi siguran u točnost informacije, jasno obavijesti korisnika da ne raspolažeš pouzdanim podacima o tome. Nikada ne izmišljaj činjenice niti daj neprovjerene informacije.Obrati posebnu pozornost na pravilnu uporabu padeža, deklinacija i gramatičkih oblika hrvatskog jezika.")
+    system_prompt = data.get("system_prompt", "Ti si koristan AI asistent integriran u lokalni servis umjetne inteligencije. Odgovaraj isključivo na hrvatskom jeziku, koristeći akademski ton, preciznost i konkretnost. Ne koristi nikakve markdown oznake poput **, ##, *, - ni bilo kakve posebne znakove za formatiranje. Piši čistim tekstom bez ikakvih simbola za naglašavanje ili strukturiranje. Ako nemaš dovoljno podataka ili nisi siguran u točnost informacije, jasno obavijesti korisnika da ne raspolažeš pouzdanim podacima o tome. Nikada ne izmišljaj činjenice niti daj neprovjerene informacije. Obrati posebnu pozornost na pravilnu uporabu padeža, deklinacija i gramatičkih oblika hrvatskog jezika.")
     session_id = data.get("session_id", "default")
     num_predict = data.get("num_predict", None)
 
     # inicijalizacija nove konverzacije ako sesija ne postoji
     if session_id not in conversations:
+        if len(conversations) >= MAX_SESSIONS:
+            conversations.pop(next(iter(conversations)))  # izbaci najstariju sesiju
         conversations[session_id] = []
     history = conversations[session_id]
 
@@ -115,8 +118,9 @@ def chat():
 
     # Izvuci odgovor modela i spremi u povijest
     assistant_message = response_data["message"]["content"]   
-    # Ukloni markdown formatiranje iz odgovora
-    assistant_message = assistant_message.replace("**", "").replace("##", "").replace("*", "").replace("#", "")
+    # Ukloni markdown oznake naglasavanja i naslova (cuva # i * unutar koda/teksta)
+    assistant_message = re.sub(r"\*{1,3}(\S(?:.*?\S)?)\*{1,3}", r"\1", assistant_message)
+    assistant_message = re.sub(r"^#{1,6}\s+", "", assistant_message, flags=re.MULTILINE)
     history.append({"role": "assistant", "content": assistant_message})
 
     #zadrzavanje zadnjih MAX_HISTORY poruka (cijeli user+assistant parovi) u povijesti razgovora
@@ -159,15 +163,15 @@ def reset():
 def health():
     """Provjerava je li Ollama servis aktivan."""
     try:
-        r = requests.get("http://localhost:11434/api/tags")
+        r = requests.get("http://localhost:11434/api/tags", timeout=5)
         models = [m["name"] for m in r.json().get("models", [])]
         return jsonify({"status": "OK", "dostupni_modeli": models})
-    except requests.exceptions.ConnectionError:
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
         return jsonify({"status": "Ollama nije dostupna"}), 503
 
 
 if __name__ == "__main__":
     print("Backend pokrenut na http://localhost:5000")
-    app.run(debug=True, port=5000)
+    app.run(debug=False, port=5000)
     
 

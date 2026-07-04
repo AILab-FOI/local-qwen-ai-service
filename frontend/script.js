@@ -5,10 +5,12 @@ const SESSION_ID = crypto.randomUUID();
 
 // Dohvacanje HTML elemenata
 const chat = document.getElementById("chat-container");
+const WELCOME_HTML = chat.innerHTML;
 const input = document.getElementById("user-input");
 const sendBtn = document.getElementById("send-btn");
 const perfToggle = document.getElementById("perf-toggle");
 const resetBtn = document.getElementById("reset-btn");
+
 
 // Prikaz performansi
 let showPerf = true;
@@ -74,6 +76,14 @@ async function sendMessage() {
                 session_id: SESSION_ID
             })
         });
+
+         if (res.status === 429) {
+            typingRow.remove();
+            addBubble("Prekoračen je dopušteni broj zahtjeva. Pričekajte minutu i pokušajte ponovno.", "assistant");
+            sendBtn.disabled = false;
+            input.focus();
+            return;
+        }
 
         var data = await res.json();
         typingRow.remove();
@@ -146,10 +156,5 @@ async function resetChat() {
         },
         body: JSON.stringify({session_id: SESSION_ID})
     });
-    chat.innerHTML =
-        '<div class="welcome" id="welcome">' +
-        '  <img src="logo.png" alt="Qwen Local AI" class="welcome-logo" />' +
-        '  <h2>Qwen 3-14B lokalni model</h2>' +
-        '  <p>Postavite pitanje i model će generirati odgovor lokalno, bez slanja podataka u oblak</p>' +
-        '</div>';
+    chat.innerHTML = WELCOME_HTML;
 }

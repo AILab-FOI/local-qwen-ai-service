@@ -1,4 +1,4 @@
-# Qwen 3:14B - Lokalni AI Servis
+# Qwen 3-14B - Lokalni AI Servis
 
 Završni rad -  Praktična primjena otvorenog LLM modela Qwen 3-14B kroz izgradnju lokalnog servisa umjetne inteligencije. 
 
@@ -27,6 +27,7 @@ qwen-local-ai/
 │   ├── script.js
 │   └── logo.png
 ├── generiraj_grafove.py
+├── requirements-analiza.txt
 ├── rezultati_context_length.csv
 ├── rezultati_system_prompts.csv
 ├── graf_brzina_vs_kontekst.pdf
@@ -56,6 +57,10 @@ ollama pull qwen3:14b
 ```
 cd backend
 pip install -r requirements.txt
+```
+Za generiranje grafova iz rezultata mjerenja (opcionalno, pokrenuti iz roota projekta):
+```
+pip install -r requirements-analiza.txt
 ```
 
 3. Pokretanje backend servera:
@@ -109,8 +114,7 @@ razgovora u memorijski rječnik `conversations` gdje je ključ jedinstveni
 `session_id` (UUID generiran na frontendu kroz `crypto.randomUUID()` pri 
 svakom učitavanju stranice). Time se postiže razdvajanje konverzacija 
 između istovremenih korisnika - svaki browser tab dobiva vlastiti, 
-izolirani kontekst. Povijest razgovora nije perzistentna; briše se pri 
-ponovnom pokretanju backend aplikacije ili osvježavanju stranice korisnika.
+izolirani kontekst. Povijest razgovora nije perzistentna; briše se pri ponovnom pokretanju backend aplikacije; osvježavanjem stranice korisnik dobiva novi session_id i prazan kontekst, dok se stare sesije na poslužitelju uklanjaju FIFO mehanizmom nakon dosegnutog limita od 100 sesija.
 
 **Reverse tunnel arhitektura** - Cloudflare Tunnel uspostavlja trajnu izlaznu 
 vezu između lokalnog računala i Cloudflareove edge mreže.
@@ -144,10 +148,9 @@ prema standardima produkcijske primjene. Ključne napomene:
   aplikacije. Za produkciju bi se koristio perzistentni storage.
 - Aplikacija je dostupna samo dok je lokalno računalo uključeno i backend 
   pokrenut.
-  - Konverzacije se ne perzistiraju između restarta backenda niti preko 
-  refresh-a stranice - svaka nova sesija počinje s praznim kontekstom. 
-  U daljnjem razvoju mogla bi se dodati lagana perzistentna pohrana 
-  (npr. SQLite baza).
+- Konverzacije se ne perzistiraju između restarta backenda, a broj 
+  istovremeno pohranjenih sesija ograničen je na 100 (FIFO). U daljnjem 
+  razvoju mogla bi se dodati lagana perzistentna pohrana (npr. SQLite baza).
 - Zbog prirode lokalnog GPU inferenca, Ollama sekvencijalno obrađuje 
   upite - istovremeni zahtjevi više korisnika ulaze u red čekanja. 
  
